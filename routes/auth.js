@@ -11,7 +11,12 @@ const LOCK_DURATION_MS = 60 * 1000; // 1 minute
 function publicUser(user) {
   return {
     id: user._id,
-    fullName: user.fullName,
+    surname: user.surname,
+    givenName: user.givenName,
+    middleName: user.middleName,
+    fullName: [user.givenName, user.middleName, user.surname]
+      .filter(Boolean)
+      .join(' '),
     studentId: user.studentId,
     email: user.email,
     contactNumber: user.contactNumber,
@@ -27,49 +32,103 @@ router.get('/captcha', (req, res) => {
   res.json(generateCaptcha());
 });
 
-// Register (Week 2)
+// Register
 router.post('/register', async (req, res) => {
-  console.log('[auth] POST /register body:', req.body);
+  console.log('[auth] POST /register body:', {
+    ...req.body,
+    password: '(hidden)',
+  });
+
   try {
-    const { fullName, studentId, email, contactNumber, password, plateNumber, vehicleType } = req.body;
+    const {
+      surname,
+      givenName,
+      middleName,
+      studentId,
+      email,
+      contactNumber,
+      password,
+      plateNumber,
+      vehicleType,
+    } = req.body;
 
-    // 2.5 - validate required fields before account creation
-    if (!fullName || !studentId || !email || !contactNumber || !password || !plateNumber || !vehicleType) {
-      return res.status(400).json({ message: 'Please fill in all fields, including vehicle info' });
+    console.log('[auth] registration validation:', {
+      surname: !!surname,
+      givenName: !!givenName,
+      studentId: !!studentId,
+      email: !!email,
+      contactNumber: !!contactNumber,
+      password: !!password,
+      plateNumber: !!plateNumber,
+      vehicleType: !!vehicleType,
+    });
+
+    if (
+      !surname ||
+      !givenName ||
+      !studentId ||
+      !email ||
+      !contactNumber ||
+      !password ||
+      !plateNumber ||
+      !vehicleType
+    ) {
+      return res.status(400).json({
+        message: 'Please fill in all required fields, including vehicle info',
+      });
     }
+
     if (!['car', 'motorcycle'].includes(vehicleType)) {
-      return res.status(400).json({ message: 'Vehicle type must be car or motorcycle' });
+      return res.status(400).json({
+        message: 'Vehicle type must be car or motorcycle',
+      });
     }
 
-    // Check existing email
-    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedPlate = plateNumber.trim().toUpperCase();
+
+    const existingEmail = await User.findOne({
+      email: normalizedEmail,
+    });
+
     if (existingEmail) {
-      return res.status(400).json({ message: 'Email is already registered' });
+      return res.status(400).json({
+        message: 'Email is already registered',
+      });
     }
 
-    // 2.6 - prevent duplicate registration of the same Student ID
-    const existingStudentId = await User.findOne({ studentId });
+    const existingStudentId = await User.findOne({
+      studentId,
+    });
+
     if (existingStudentId) {
-      return res.status(400).json({ message: 'Student ID is already registered' });
+      return res.status(400).json({
+        message: 'Student ID is already registered',
+      });
     }
 
-    // 2.6 - prevent duplicate registration of the same vehicle plate number
-    const existingPlate = await User.findOne({ 'vehicle.plateNumber': plateNumber.trim().toUpperCase() });
+    const existingPlate = await User.findOne({
+      'vehicle.plateNumber': normalizedPlate,
+    });
+
     if (existingPlate) {
-      return res.status(400).json({ message: 'This vehicle plate number is already registered' });
+      return res.status(400).json({
+        message: 'This vehicle plate number is already registered',
+      });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 2.7 - store the registered student and vehicle information
     const user = await User.create({
-      fullName,
+      surname,
+      givenName,
+      middleName: middleName || '',
       studentId,
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       contactNumber,
       passwordHash,
       vehicle: {
-        plateNumber: plateNumber.trim().toUpperCase(),
+        plateNumber: normalizedPlate,
         vehicleType,
       },
     });
@@ -80,7 +139,16 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ message: 'Server error' });
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: 'This account, Student ID, or vehicle plate is already registered',
+      });
+    }
+
+    res.status(500).json({
+      message: 'Server error',
+    });
   }
 });
 
