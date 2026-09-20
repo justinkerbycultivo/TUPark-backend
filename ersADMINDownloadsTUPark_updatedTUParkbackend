@@ -1,0 +1,22 @@
+[1mdiff --git a/server.js b/server.js[m
+[1mindex f6aa251..5c5f65d 100644[m
+[1m--- a/server.js[m
+[1m+++ b/server.js[m
+[36m@@ -8,6 +8,8 @@[m [mconst spotsRouter = require('./routes/spots');[m
+ const reservationsRouter = require('./routes/reservations');[m
+ const guardRouter = require('./routes/guard');[m
+ const adminRouter = require('./routes/admin');[m
+[32m+[m[32mconst areasRouter = require('./routes/areas');[m
+[32m+[m[32mconst announcementsRouter = require('./routes/announcements');[m
+ [m
+ const app = express();[m
+ [m
+[36m@@ -24,6 +26,8 @@[m [mapp.use('/api/reservations', reservationsRouter);[m
+ app.use('/api/auth', authRouter);[m
+ app.use('/api/guard', guardRouter);[m
+ app.use('/api/admin', adminRouter);[m
+[32m+[m[32mapp.use('/api/areas', areasRouter);[m
+[32m+[m[32mapp.use('/api/announcements', announcementsRouter);[m
+ [m
+ const PORT = process.env.PORT || 5000;[m
+ [m

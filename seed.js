@@ -32,19 +32,53 @@ const sampleSpots = [
     // Test guard account so you can log in and try the QR scanner
     // without registering a real guard through the app (there's no
     // guard sign-up screen — guard/admin accounts are created here).
-    const guardEmail = 'guard@tup.edu.ph';
-    await User.deleteOne({ email: guardEmail });
-    const passwordHash = await bcrypt.hash('guard123', 10);
-    await User.create({
-      fullName: 'Campus Guard',
-      studentId: 'GUARD-0001',
-      email: guardEmail,
-      contactNumber: '09000000000',
-      passwordHash,
-      role: 'guard',
-      vehicle: { plateNumber: 'GUARD-N/A', vehicleType: 'car' },
-    });
-    console.log(`Seeded guard account -> email: ${guardEmail} / password: guard123`);
+// Test guard account
+const guardEmail = 'guard@tup.edu.ph';
+await User.deleteOne({ email: guardEmail });
+
+const guardPasswordHash = await bcrypt.hash('guard123', 10);
+
+await User.create({
+  surname: 'Guard',
+  givenName: 'Campus',
+  middleName: '',
+  studentId: 'GUARD-0001',
+  email: guardEmail,
+  contactNumber: '09000000000',
+  passwordHash: guardPasswordHash,
+  role: 'guard',
+  isAdmin: false,
+  vehicle: {
+    plateNumber: 'GUARD-N/A',
+    vehicleType: 'car',
+  },
+});
+
+console.log(`Seeded guard account: ${guardEmail}`);
+
+// Test admin account
+const adminEmail = 'admin@tup.edu.ph';
+await User.deleteOne({ email: adminEmail });
+
+const adminPasswordHash = await bcrypt.hash('admin123', 10);
+
+await User.create({
+  surname: 'Admin',
+  givenName: 'TUPark',
+  middleName: '',
+  studentId: 'ADMIN-0001',
+  email: adminEmail,
+  contactNumber: '09000000001',
+  passwordHash: adminPasswordHash,
+  role: 'admin',
+  isAdmin: true,
+  vehicle: {
+    plateNumber: 'ADMIN-N/A',
+    vehicleType: 'car',
+  },
+});
+
+console.log(`Seeded admin account: ${adminEmail}`);
   } catch (err) {
     console.error('Seed error:', err.message);
   } finally {

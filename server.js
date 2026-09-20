@@ -8,6 +8,8 @@ const spotsRouter = require('./routes/spots');
 const reservationsRouter = require('./routes/reservations');
 const guardRouter = require('./routes/guard');
 const adminRouter = require('./routes/admin');
+const areasRouter = require('./routes/areas');
+const announcementsRouter = require('./routes/announcements');
 
 const app = express();
 
@@ -24,6 +26,8 @@ app.use('/api/reservations', reservationsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/guard', guardRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/areas', areasRouter);
+app.use('/api/announcements', announcementsRouter);
 
 const PORT = process.env.PORT || 5000;
 
